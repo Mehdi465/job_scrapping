@@ -7,19 +7,17 @@ import branca
 def get_city_coordinates_from_name(city_name:str):
     location=None
     geolocator = Nominatim(user_agent="geoapiExecises")
-    location = geolocator.geocode("Nice")
+    location = geolocator.geocode(city_name)
 
     if location:
         print(f"City: {location.address}")
         print(f"Latitude: {location.latitude}, Longitude: {location.longitude}")
+        return (location.latitude,location.longitude)
     else:
         print("City not found")
+        return None
 
-    input(location)
-
-    return (location.latitude,location.longitude)
-
-#print(get_city_coordinates_from_name(""))
+print(get_city_coordinates_from_name("oizendfpoaiznefoiuznfzfhziorhjeiopdfjozjfoizejf"))
 
 
 ### ----------------- MARKERS ---------------- ###
@@ -90,4 +88,4 @@ if GROUP:
     folium.LayerControl().add_to(m)
 
 
-m.save("results/index.html")
+#m.save("results/index.html")
