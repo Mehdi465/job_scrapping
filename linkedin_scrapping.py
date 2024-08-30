@@ -4,9 +4,11 @@ import pandas as pd
 from enum import Enum
 from job_offer import JobOffer
 
-# this class contains all infos about a job offer that i care
-class JobOffer:
+def request_succeeded(request):
+    return request.status_code == 200
 
+# this class contains all infos about a job offer that I care
+class JobOffer:
     def __init__(self,job_name,company_name,link,location,salary,id) -> None:
         self.job_name = job_name
         self.company_name = company_name
@@ -14,8 +16,6 @@ class JobOffer:
         self.location = location
         self.salary = salary
         self.id = id
-
-
 
 class JobWebSite(Enum):
     All = 0
@@ -58,30 +58,53 @@ class JobScrapper:
 
             return [response_indeed]
 
-    def extract_jobs_infos(self,response) -> list(JobOffer):
-        ## request succeded
-        if (response.status_code == 200):
-            pass
+    def extract_jobs_infos(self,responses:list) -> list[JobOffer]:
 
-        else:
-            print("Response")
+        list_jobs = []
+
+        for response in responses:
+            ## request succeded
+            if (request_succeeded(response)):
+                pass
+
+            # request failed
+            else:
+                # go on the other response
+                continue
+
+####################################
+###-------------MAIN-------------###
+####################################
+
+if __name__ == "__main__":
+
+    # INPUTS
+    job_title = "software engineer"
+    job_title = job_title.replace(" ","%20") # in url request " " is replaced by "%20"
+    location = "Toronto"
+
+    # create the variable the make the get request
+    job_research = JobScrapper(job_title,
+                               location,
+                               JobWebSite.All)
+    # do the request
+    list_responses = job_research.get_job_offer()
+
+    #################################################
+    ### ------------- TESTING PART -------------- ###
+    #################################################
+
+    TEST=False
+    if TEST:
+        list_url = f"https://www.linkedin.com/jobs/search/?currentJobId=4010735510&keywords={job_title}&location={location}&origin=JOBS_HOME_SEARCH_BUTTON&refresh=true"
+
+        job_id = 3901532998
+
+        job_url = f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{job_id}"
+
+        response = requests.get(list_url)
+        print(response.status_code == 200)
 
 
-
-
-job_title = "software engineer"
-job_title = job_title.replace(" ","%20")
-location = "Toronto"
-
-list_url = f"https://www.linkedin.com/jobs/search/?currentJobId=4010735510&keywords={job_title}&location={location}&origin=JOBS_HOME_SEARCH_BUTTON&refresh=true"
-
-job_id = 3901532998
-
-job_url = f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{job_id}"
-
-response = requests.get(list_url)
-print(response.status_code == 200)
-
-
-#with open("file.html","w+") as file_:
-#    file_.write(response.text)
+        #with open("file.html","w+") as file_:
+        #    file_.write(response.text)
