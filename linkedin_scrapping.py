@@ -16,5 +16,8 @@ job_url = f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{job_id}"
 response = requests.get(job_url)
 print(response)
 
+
+
+
 with open("file.html","w+") as file_:
     file_.write(response.text)
