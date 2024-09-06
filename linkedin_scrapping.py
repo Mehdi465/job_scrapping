@@ -28,23 +28,41 @@ class Response:
         self.content = content
 
     def request_succeeded(self):
-        return self.response.status_code == 200
+        return self.content.status_code == 200
 
-    def get_info_one_job(self) -> JobOffer:
-        """for all jobs in the page, extract """
-        job_name = None
-        company_name = None
-        link = None
-        location = None
-        salary = None
-        id = None
-        website = None
+    def get_info_one_job(html_part_job) -> JobOffer:
+        """for one job in the page, extract all related info"""
+        print(html_part_job)
+        # Parse the HTML
+        soup = BeautifulSoup(html_part_job, 'html.parser')
+        # Extract job ID from the 'data-entity-urn' attribute
+        job_id = soup.find('div', class_='job-search-card')['data-entity-urn'].split(':')[-1]
+        # Extract job link from the 'href' attribute
+        job_link = soup.find('a', class_='base-card__full-link')['href']
+        # Extract job name
+        job_name = soup.find('h3', class_='base-search-card__title').text.strip()
+        # Extract company name
+        company_name = soup.find('h4', class_='base-search-card__subtitle').text.strip()
+        # Extract job location
+        location = soup.find('span', class_='job-search-card__location').text.strip()
 
-        pass
+        job_result = JobOffer(job_name,company_name,job_link,location,salary=None,id=job_id,website=None)
+
+        return job_result
+
 
     def get_all_job(self) -> list[JobOffer]:
         """Parse the text in reponse"""
-        pass
+        jobs = []
+        # Parse the HTML
+        soup = BeautifulSoup(self.content.text, 'html.parser')
+        # Find all job cards using the class pattern
+        job_cards = soup.find_all('div', class_="base-card relative w-full hover:no-underline focus:no-underline base-card--link base-search-card base-search-card--link job-search-card")
+
+        for job_card in job_cards:
+            jobs.append(Response.get_info_one_job(job_card))
+
+        return jobs
 
 # This class aims to Scrap jobs offer on different site
 class JobScrapper:
@@ -75,14 +93,14 @@ class JobScrapper:
         responses_researches = []
 
         if self.websites == JobWebSite.All:
-            response_linkedin = Response(JobWebSite.Linkedin, JobScrapper.get_job_offer_on_website(JobWebSite.Linkedin))
-            response_indeed = Response(JobWebSite.Indeed, JobScrapper.get_job_offer_on_website(JobWebSite.Indeed))
+            response_linkedin = self.get_job_offer_on_website(JobWebSite.Linkedin)
+            response_indeed = self.get_job_offer_on_website(JobWebSite.Indeed)
 
             responses_researches = [response_linkedin,response_indeed]
 
         else:
             for website in self.websites:
-                responses_researches.append(Response(website,website))
+                responses_researches.append(self.get_job_offer_on_website(website))
 
         return responses_researches
 
@@ -97,7 +115,7 @@ class JobScrapper:
 
             # else inform user that this request did not succeed
             else:
-                print(f"request for research on {response.site} did not succeeded with response code {response.content.text}")
+                print(f"request for research on {response.site} did not succeeded with status code : {response.content.status_code}")
 
         return list_jobs
 
@@ -105,30 +123,38 @@ class JobScrapper:
 ###-------------MAIN-------------###
 ####################################
 
+def mock_response():
+    """mock the response to the get job request"""
+    content = ""
+    with open("results/file.html","r+") as html_file:
+        content  = html_file.read()
+
+    return Response(JobWebSite.Linkedin,content)
+
 if __name__ == "__main__":
     # INPUTS
     job_title = "software engineer"
     job_title = job_title.replace(" ","%20") # in url request " " is replaced by "%20"
     location = "Toronto"
     sites = [JobWebSite.Linkedin]
-    """
 
-    # create the variable the make the get request
+
+    # create the variable to make the get request
     job_research = JobScrapper(job_title,
                                location,
                                websites=sites)
     # do the request
     all_responses = job_research.get_job_offer()
+    print(all_responses)
 
-    print(all_responses) """
+    all_jobs = JobScrapper.extract_jobs_infos(all_responses)
 
-    #all_jobs = JobScrapper.extract_jobs_infos(all_responses)
-
+    print(all_jobs)
     #################################################
     ### ------------- TESTING PART -------------- ###
     #################################################
 
-    TEST=True
+    TEST=False
     if TEST:
         test_url = f"https://www.linkedin.com/jobs/search?&keywords={job_title}&location={location}&original_referer=https%3A%2F%2Fwww.linkedin.com%2Fjobs%2Fsearch%3Fkeywords%3Dsoftware%2520engineer%26location%3DCanada&position=1"
         list_url = f"https://www.linkedin.com/jobs/search?&keywords={job_title}&location={location}&origin=JOBS_HOME_SEARCH_BUTTON&refresh=true"
