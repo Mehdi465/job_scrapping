@@ -6,7 +6,7 @@ class GeoTest(unittest.TestCase):
 
     @patch('test_leaflet.Nominatim.geocode')
     def test_get_coordinates_valid_city(self,mock_geocode):
-         # Mock the return value for a valid city
+        # Mock the return value for a valid city
         mock_location = MagicMock()
         mock_location.latitude = 48.8566
         mock_location.longitude = 2.3522
