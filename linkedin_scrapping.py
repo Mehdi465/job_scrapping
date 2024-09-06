@@ -3,6 +3,11 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from enum import Enum
 from job_offer import JobOffer
+import folium
+from geopy.geocoders import Nominatim
+import requests
+import pandas
+import branca
 
 #Contains all websites for the research
 class JobWebSite(Enum):
@@ -21,6 +26,50 @@ class JobOffer:
         self.id = id
         self.website = website
 
+    def extract_city_from_location(self):
+        return self.location.split(",")[0].strip()   
+
+    def get_city_coordinates_from_name(self):
+        location = None
+        geolocator = Nominatim(user_agent="geoapiExecises")
+        location = geolocator.geocode(JobOffer.extract_city_from_location(self.location))
+
+        if location:
+            return location
+        else:
+            print("City not found")
+            return None    
+
+    def create_marker(self):
+        # get location in Earth format
+        location_xy = JobOffer.get_city_coordinates_from_name()
+
+        html = f"""
+        <h1> {self.job_name}</h1><br>
+        {self.company_name}
+        <p>
+        <code>
+            {self.link}
+        </code>
+        <code>
+            {self.website}
+        </code>
+        </p>
+        """
+
+        iframe = branca.element.IFrame(html=html, width=500, height=300)
+        popup1 = folium.Popup(iframe, max_width=500)
+
+        #create the Marker
+        marker = folium.Marker(
+            location=[location_xy.latitude, location_xy.longitude],
+            tooltip=f"{self.job_name}",
+            popup=popup1,
+            icon=folium.Icon(icon="cloud"),
+        )
+
+        return marker
+
 # stores reponses to analyze them
 class Response:
     def __init__(self,website : JobWebSite, content) -> None:
@@ -30,11 +79,11 @@ class Response:
     def request_succeeded(self):
         return self.content.status_code == 200
 
-    def get_info_one_job(html_part_job) -> JobOffer:
+    def get_info_one_job(html_part_job,soup) -> JobOffer:
         """for one job in the page, extract all related info"""
-        print(html_part_job)
+
         # Parse the HTML
-        soup = BeautifulSoup(html_part_job, 'html.parser')
+        #soup = BeautifulSoup(html_part_job, 'html.parser')
         # Extract job ID from the 'data-entity-urn' attribute
         job_id = soup.find('div', class_='job-search-card')['data-entity-urn'].split(':')[-1]
         # Extract job link from the 'href' attribute
@@ -60,7 +109,7 @@ class Response:
         job_cards = soup.find_all('div', class_="base-card relative w-full hover:no-underline focus:no-underline base-card--link base-search-card base-search-card--link job-search-card")
 
         for job_card in job_cards:
-            jobs.append(Response.get_info_one_job(job_card))
+            jobs.append(Response.get_info_one_job(job_card,soup))
 
         return jobs
 
@@ -127,7 +176,7 @@ def mock_response():
     """mock the response to the get job request"""
     content = ""
     with open("results/file.html","r+") as html_file:
-        content  = html_file.read()
+        content = html_file.read()
 
     return Response(JobWebSite.Linkedin,content)
 
@@ -145,14 +194,26 @@ if __name__ == "__main__":
                                websites=sites)
     # do the request
     all_responses = job_research.get_job_offer()
-    print(all_responses)
 
+    # get all jobs and their infos 
     all_jobs = JobScrapper.extract_jobs_infos(all_responses)
 
-    print(all_jobs)
+    ### ------------- MAP PART --------------- ###
+
     #################################################
     ### ------------- TESTING PART -------------- ###
     #################################################
+
+    m = folium.Map(tiles="CartoDB Voyager")
+
+    for job in all_jobs:
+        # create marker and add it to the map
+        job.create_marker().add_to(m)
+
+
+        m.save("results/index.html")    
+        input("ok")
+
 
     TEST=False
     if TEST:

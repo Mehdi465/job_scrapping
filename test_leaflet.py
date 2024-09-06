@@ -17,7 +17,7 @@ def get_city_coordinates_from_name(city_name:str):
         print("City not found")
         return None
 
-print(get_city_coordinates_from_name("oizendfpoaiznefoiuznfzfhziorhjeiopdfjozjfoizejf"))
+print(get_city_coordinates_from_name("Toronto"))
 
 
 ### ----------------- MARKERS ---------------- ###
@@ -56,6 +56,8 @@ if MARKERS :
         icon=folium.Icon(color="pink"),
     ).add_to(m)
 
+    
+
 ### ----------------- Vectors ---------------- ###
 
 VECTORS = True
@@ -88,4 +90,4 @@ if GROUP:
     folium.LayerControl().add_to(m)
 
 
-#m.save("results/index.html")
+m.save("results/index.html")
