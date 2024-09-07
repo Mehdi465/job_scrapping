@@ -8,6 +8,19 @@ from geopy.geocoders import Nominatim
 import requests
 import pandas
 import branca
+import random
+
+def draw_gaussian_in_range():
+    mean = 0
+    std_dev = 0.15  # Standard deviation that helps most values fall between -0.5 and 0.5
+    
+    while True:
+        # Draw a number from the Gaussian distribution
+        num = random.gauss(mean, std_dev)
+        
+        # Ensure the number is within the desired range
+        if -0.5 <= num <= 0.5:
+            return num
 
 #Contains all websites for the research
 class JobWebSite(Enum):
@@ -26,13 +39,13 @@ class JobOffer:
         self.id = id
         self.website = website
 
-    def extract_city_from_location(self):
-        return self.location.split(",")[0].strip()   
+    def extract_city_from_location(location):
+        return location.split(",")[0].strip()   
 
-    def get_city_coordinates_from_name(self):
+    def get_city_coordinates_from_name(whole_location):
         location = None
         geolocator = Nominatim(user_agent="geoapiExecises")
-        location = geolocator.geocode(JobOffer.extract_city_from_location(self.location))
+        location = geolocator.geocode(JobOffer.extract_city_from_location(whole_location))
 
         if location:
             return location
@@ -42,7 +55,7 @@ class JobOffer:
 
     def create_marker(self):
         # get location in Earth format
-        location_xy = JobOffer.get_city_coordinates_from_name()
+        location_xy = JobOffer.get_city_coordinates_from_name(self.location)
 
         html = f"""
         <h1> {self.job_name}</h1><br>
@@ -62,7 +75,8 @@ class JobOffer:
 
         #create the Marker
         marker = folium.Marker(
-            location=[location_xy.latitude, location_xy.longitude],
+            # add random to make markers not ath the same place, bc i cant extract the reak address
+            location=[location_xy.latitude + draw_gaussian_in_range(), location_xy.longitude + draw_gaussian_in_range()],
             tooltip=f"{self.job_name}",
             popup=popup1,
             icon=folium.Icon(icon="cloud"),
@@ -208,13 +222,12 @@ if __name__ == "__main__":
 
     for job in all_jobs:
         # create marker and add it to the map
-        job.create_marker().add_to(m)
-
-
-        m.save("results/index.html")    
-        input("ok")
-
-
+        marker = job.create_marker()
+        marker.add_to(m)
+        print(f"job {job.id} added")
+        
+    m.save("results/index.html")    
+ 
     TEST=False
     if TEST:
         test_url = f"https://www.linkedin.com/jobs/search?&keywords={job_title}&location={location}&original_referer=https%3A%2F%2Fwww.linkedin.com%2Fjobs%2Fsearch%3Fkeywords%3Dsoftware%2520engineer%26location%3DCanada&position=1"
