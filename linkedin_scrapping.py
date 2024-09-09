@@ -62,11 +62,11 @@ class JobOffer:
         {self.company_name}
         <p>
         <code>
-            {self.link}
+            <a href="{self.link}" target="_blank">click here to see the offer</a> 
         </code>
         <code>
-            <a href="{self.website}">click here to see the offer</a> 
-        </code>
+        Linkedin job offer
+        </code> 
         </p>
         """
 
