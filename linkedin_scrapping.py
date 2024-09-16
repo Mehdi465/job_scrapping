@@ -1,23 +1,19 @@
 import requests
 from bs4 import BeautifulSoup
-import pandas as pd
 from enum import Enum
-from job_offer import JobOffer
 import folium
 from geopy.geocoders import Nominatim
-import requests
-import pandas
 import branca
 import random
 
 def draw_gaussian_in_range():
     mean = 0
     std_dev = 0.15  # Standard deviation that helps most values fall between -0.5 and 0.5
-    
+
     while True:
         # Draw a number from the Gaussian distribution
         num = random.gauss(mean, std_dev)
-        
+
         # Ensure the number is within the desired range
         if -0.5 <= num <= 0.5:
             return num
@@ -40,7 +36,7 @@ class JobOffer:
         self.website = website
 
     def extract_city_from_location(location):
-        return location.split(",")[0].strip()   
+        return location.split(",")[0].strip()
 
     def get_city_coordinates_from_name(whole_location):
         location = None
@@ -51,7 +47,7 @@ class JobOffer:
             return location
         else:
             print("City not found")
-            return None    
+            return None
 
     def create_marker(self):
         # get location in Earth format
@@ -62,11 +58,11 @@ class JobOffer:
         {self.company_name}
         <p>
         <code>
-            <a href="{self.link}" target="_blank">click here to see the offer</a> 
+            <a href="{self.link}" target="_blank">click here to see the offer</a>
         </code>
         <code>
         Linkedin job offer
-        </code> 
+        </code>
         </p>
         """
 
@@ -87,7 +83,7 @@ class JobOffer:
         else:
             return None
 
-            
+
 # stores reponses to analyze them
 class Response:
     def __init__(self,website : JobWebSite, content) -> None:
@@ -99,7 +95,7 @@ class Response:
 
     def get_info_one_job(card) -> JobOffer:
         """for one job in the page, extract all related info"""
-        
+
         # Extract job ID from the 'data-entity-urn' attribute
         job_id = card['data-entity-urn'].split(':')[-1]
         # Extract job link from the 'href' attribute
@@ -211,7 +207,7 @@ if __name__ == "__main__":
     # do the request
     all_responses = job_research.get_job_offer()
 
-    # get all jobs and their infos 
+    # get all jobs and their infos
     all_jobs = JobScrapper.extract_jobs_infos(all_responses)
 
     ### ------------- MAP PART --------------- ###
@@ -230,9 +226,9 @@ if __name__ == "__main__":
             print(f"job {job.id} added")
         else:
             print("Coulnd not place the job offer on the map")
-        
-    m.save("results/index.html")    
- 
+
+    m.save("results/index.html")
+
     TEST=False
     if TEST:
         test_url = f"https://www.linkedin.com/jobs/search?&keywords={job_title}&location={location}&original_referer=https%3A%2F%2Fwww.linkedin.com%2Fjobs%2Fsearch%3Fkeywords%3Dsoftware%2520engineer%26location%3DCanada&position=1"
