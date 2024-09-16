@@ -7,6 +7,7 @@ import branca
 import random
 
 def draw_gaussian_in_range():
+    """Used to place falg in a city, because i cant get the exact address of a company"""
     mean = 0
     std_dev = 0.15  # Standard deviation that helps most values fall between -0.5 and 0.5
 
